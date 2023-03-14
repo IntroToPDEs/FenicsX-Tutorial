@@ -1,0 +1,60 @@
+# This is a basic workflow to help you get started with Actions
+name: Test release branch against DOLFINx nightly build
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [main]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  test-nightly:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    container: dolfinx/lab:nightly
+
+    env:
+      HDF5_MPI: "ON"
+      PYVISTA_OFF_SCREEN: true
+      DISPLAY: ":99.0"
+      PYVISTA_JUPYTER_BACKEND: panel
+    
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+        # Workaround for scheduling to work
+        with:
+          ref: main
+    # Upgrade setuptools and pip
+      # https://github.com/pypa/setuptools/issues/3269#issuecomment-1254507377
+      - name: Install apt dependencies and upgrade pip
+        run: |
+          apt-get update && apt-get install -y libgl1-mesa-glx libxrender1 xvfb
+          python3 -m pip install -U "setuptools<=65.5.1" pip pkgconfig
+      # Install `h5py`
+      # https://github.com/hl5py/h5py/issues/2222
+      - name: Install h5py and pip requirements
+        run: |
+          python3 -m pip install cython
+          python3 -m pip install --no-build-isolation --no-binary=h5py h5py
+          python3 -m pip install --no-cache-dir -r docker/requirements.txt --upgrade  
+      - name: Enable complex test in parallel
+        run: |
+          export PKG_CONFIG_PATH=/usr/local/dolfinx-complex/lib/pkgconfig:$PKG_CONFIG_PATH
+          export PETSC_ARCH=linux-gnu-complex-32
+          export PYTHONPATH=/usr/local/dolfinx-complex/lib/python3.10/dist-packages:$PYTHONPATH
+          export LD_LIBRARY_PATH=/usr/local/dolfinx-complex/lib:$LD_LIBRARY_PATH
+      - name: Test real notebooks in parallel
+        run: |
+          #cd lesson1
+          #python3 -c "from pyvista import start_xvfb; start_xvfb(0.1)"
+          #mpirun -n 2 python3 createmesh.py    
+      
+      - name: Test building the book
+        run: 
+          PYVISTA_OFF_SCREEN=false jupyter-book build  -W .
+
