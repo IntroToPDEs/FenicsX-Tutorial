@@ -28,7 +28,7 @@ domain, cell_markers, facet_markers = gmshio.model_to_mesh(gmsh.model, mesh_comm
 from dolfinx import fem
 import ufl
 p = 1
-Ue = ufl.FiniteElement("CG", mesh.ufl_cell(), p)
+Ue = ufl.FiniteElement("CG", domain.ufl_cell(), p)
 V = fem.FunctionSpace(domain, Ue)
 
 from dolfinx.plot import create_vtk_mesh
