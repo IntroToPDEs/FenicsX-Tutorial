@@ -8,4 +8,4 @@ docker build . -t introtopde:lab
 
 cd ..
 
-docker run --init -p 8888:8888 -v "$(pwd)":/root/shared --name=dolfinx_lab1  -ti introtopde:lab
+docker run --init -p 8888:8888 -w /root/shared -v "$(pwd)":/root/shared --name=dolfinx_lab1  -ti introtopde:lab
