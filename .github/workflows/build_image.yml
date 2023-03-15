@@ -50,9 +50,9 @@ jobs:
           export LD_LIBRARY_PATH=/usr/local/dolfinx-complex/lib:$LD_LIBRARY_PATH
       - name: Test real notebooks in parallel
         run: |
-          #cd lesson1
-          #python3 -c "from pyvista import start_xvfb; start_xvfb(0.1)"
-          #mpirun -n 2 python3 createmesh.py    
+          cd lesson1
+          python3 -c "from pyvista import start_xvfb; start_xvfb(0.1)"
+          python3 createmesh.py    
       
       - name: Test building the book
         run: 
